@@ -1,0 +1,46 @@
+@startuml OasisLibrary
+class User {
+    - id: int
+    - firstName: String
+    - lastName: String
+    - userName: String
+    - address: String
+    - phoneNumber: String
+    - email: String
+    - role: String
+}
+
+class Book {
+    - id: int
+    - title: String
+    - ISBN: String
+    - publishedYear: int
+    - description: String
+}
+
+class Category {
+    - id: int
+    - name: String
+    - description: String
+}
+
+class Author {
+    - id: int
+    - firstName: String
+    - lastName: String
+    - biography: String
+    - birthDate: Date
+}
+
+class Borrow {
+    - id: int
+    - borrowDate: Date
+    - returnDateActual: Date
+    - returnDateExpected: Date
+}
+
+User "1" -- "0..*" Borrow : borrows
+Borrow "1" -- "1" Book : refers to
+Book "1" *-- "1" Category : belongs to
+Book "1" -- "1..*" Author : written by
+@enduml
