@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -46,10 +47,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $phoneNumber = null;
 
     /**
-     * @var Collection<int, Borrow>
+     * @var Collection<int, Loan>
      */
-    #[ORM\OneToMany(targetEntity: Borrow::class, mappedBy: 'user', orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: Loan::class, mappedBy: 'user', orphanRemoval: true)]
     private Collection $borrow;
+
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeInterface $subStartDate = null;
+
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeInterface $subEndDate = null;
 
     public function __construct()
     {
@@ -180,14 +187,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     /**
-     * @return Collection<int, Borrow>
+     * @return Collection<int, Loan>
      */
     public function getBorrow(): Collection
     {
         return $this->borrow;
     }
 
-    public function addBorrow(Borrow $borrow): static
+    public function addBorrow(Loan $borrow): static
     {
         if (!$this->borrow->contains($borrow)) {
             $this->borrow->add($borrow);
@@ -197,7 +204,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function removeBorrow(Borrow $borrow): static
+    public function removeBorrow(Loan $borrow): static
     {
         if ($this->borrow->removeElement($borrow)) {
             // set the owning side to null (unless already changed)
@@ -205,6 +212,30 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
                 $borrow->setUser(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getSubStartDate(): ?\DateTimeInterface
+    {
+        return $this->subStartDate;
+    }
+
+    public function setSubStartDate(?\DateTimeInterface $subStartDate): static
+    {
+        $this->subStartDate = $subStartDate;
+
+        return $this;
+    }
+
+    public function getSubEndDate(): ?\DateTimeInterface
+    {
+        return $this->subEndDate;
+    }
+
+    public function setSubEndDate(?\DateTimeInterface $subEndDate): static
+    {
+        $this->subEndDate = $subEndDate;
 
         return $this;
     }

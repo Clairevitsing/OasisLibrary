@@ -9,7 +9,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: BorrowRepository::class)]
-class Borrow
+class Loan
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -17,13 +17,13 @@ class Borrow
     private ?int $id = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
-    private ?\DateTimeInterface $borrowDate = null;
+    private ?\DateTimeInterface $loanDate = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
-    private ?\DateTimeInterface $returnDateActual = null;
+    private ?\DateTimeInterface $dueDate = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
-    private ?\DateTimeInterface $returnDateExpected = null;
+    private ?\DateTimeInterface $returnDate = null;
 
     /**
      * @var Collection<int, Book>
@@ -45,38 +45,38 @@ class Borrow
         return $this->id;
     }
 
-    public function getBorrowDate(): ?\DateTimeInterface
+    public function getLoanDate(): ?\DateTimeInterface
     {
-        return $this->borrowDate;
+        return $this->loanDate;
     }
 
-    public function setBorrowDate(\DateTimeInterface $borrowDate): static
+    public function setLoanDate(\DateTimeInterface $loanDate): static
     {
-        $this->borrowDate = $borrowDate;
+        $this->loanDate = $loanDate;
 
         return $this;
     }
 
-    public function getReturnDateActual(): ?\DateTimeInterface
+    public function getDueDate(): ?\DateTimeInterface
     {
-        return $this->returnDateActual;
+        return $this->dueDate;
     }
 
-    public function setReturnDateActual(\DateTimeInterface $returnDateActual): static
+    public function setDueDate(\DateTimeInterface $dueDate): static
     {
-        $this->returnDateActual = $returnDateActual;
+        $this->dueDate = $dueDate;
 
         return $this;
     }
 
-    public function getReturnDateExpected(): ?\DateTimeInterface
+    public function getReturnDate(): ?\DateTimeInterface
     {
-        return $this->returnDateExpected;
+        return $this->returnDate;
     }
 
-    public function setReturnDateExpected(\DateTimeInterface $returnDateExpected): static
+    public function setReturnDate(\DateTimeInterface $returnDate): static
     {
-        $this->returnDateExpected = $returnDateExpected;
+        $this->returnDate = $returnDate;
 
         return $this;
     }
@@ -93,7 +93,7 @@ class Borrow
     {
         if (!$this->book->contains($book)) {
             $this->book->add($book);
-            $book->setBorrow($this);
+            $book->setLoan($this);
         }
 
         return $this;
@@ -103,8 +103,8 @@ class Borrow
     {
         if ($this->book->removeElement($book)) {
             // set the owning side to null (unless already changed)
-            if ($book->getBorrow() === $this) {
-                $book->setBorrow(null);
+            if ($book->getLoan() === $this) {
+                $book->setLoan(null);
             }
         }
 

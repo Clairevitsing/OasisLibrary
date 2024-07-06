@@ -35,18 +35,22 @@ class Book
     #[ORM\JoinColumn(nullable: false)]
     private ?Category $categoryId = null;
 
-    /**
-     * @var Collection<int, Author>
-     */
-    #[ORM\ManyToMany(targetEntity: Author::class, mappedBy: 'book')]
-    private Collection $authors;
-
     #[ORM\ManyToOne(inversedBy: 'book')]
-    private ?Borrow $borrow = null;
+    private ?Loan $loan = null;
+
+    /**
+     * @var Collection<int, BookAuthor>
+     */
+    #[ORM\OneToMany(targetEntity: BookAuthor::class, mappedBy: 'book', orphanRemoval: true)]
+    private Collection $bookAuthors;
+
+    #[ORM\Column]
+    private ?bool $available = null;
 
     public function __construct()
     {
         $this->authors = new ArrayCollection();
+        $this->bookAuthors = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -153,14 +157,56 @@ class Book
         return $this;
     }
 
-    public function getBorrow(): ?Borrow
+    public function getLoan(): ?Loan
     {
-        return $this->borrow;
+        return $this->loan;
     }
 
-    public function setBorrow(?Borrow $borrow): static
+    public function setLoan(?Loan $loan): static
     {
-        $this->borrow = $borrow;
+        $this->loan = $loan;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, BookAuthor>
+     */
+    public function getBookAuthors(): Collection
+    {
+        return $this->bookAuthors;
+    }
+
+    public function addBookAuthor(BookAuthor $bookAuthor): static
+    {
+        if (!$this->bookAuthors->contains($bookAuthor)) {
+            $this->bookAuthors->add($bookAuthor);
+            $bookAuthor->setBook($this);
+        }
+
+        return $this;
+    }
+
+    public function removeBookAuthor(BookAuthor $bookAuthor): static
+    {
+        if ($this->bookAuthors->removeElement($bookAuthor)) {
+            // set the owning side to null (unless already changed)
+            if ($bookAuthor->getBook() === $this) {
+                $bookAuthor->setBook(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function isAvailable(): ?bool
+    {
+        return $this->available;
+    }
+
+    public function setAvailable(bool $available): static
+    {
+        $this->available = $available;
 
         return $this;
     }

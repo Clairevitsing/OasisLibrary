@@ -29,14 +29,15 @@ class Author
     private ?\DateTimeInterface $birthDate = null;
 
     /**
-     * @var Collection<int, Book>
+     * @var Collection<int, BookAuthor>
      */
-    #[ORM\ManyToMany(targetEntity: Book::class, inversedBy: 'authors')]
-    private Collection $book;
+    #[ORM\OneToMany(targetEntity: BookAuthor::class, mappedBy: 'author', orphanRemoval: true)]
+    private Collection $bookAuthors;
 
     public function __construct()
     {
         $this->book = new ArrayCollection();
+        $this->bookAuthors = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -92,13 +93,6 @@ class Author
         return $this;
     }
 
-    /**
-     * @return Collection<int, Book>
-     */
-    public function getBook(): Collection
-    {
-        return $this->book;
-    }
 
     public function addBook(Book $book): static
     {
@@ -112,6 +106,36 @@ class Author
     public function removeBook(Book $book): static
     {
         $this->book->removeElement($book);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, BookAuthor>
+     */
+    public function getBookAuthors(): Collection
+    {
+        return $this->bookAuthors;
+    }
+
+    public function addBookAuthor(BookAuthor $bookAuthor): static
+    {
+        if (!$this->bookAuthors->contains($bookAuthor)) {
+            $this->bookAuthors->add($bookAuthor);
+            $bookAuthor->setAuthor($this);
+        }
+
+        return $this;
+    }
+
+    public function removeBookAuthor(BookAuthor $bookAuthor): static
+    {
+        if ($this->bookAuthors->removeElement($bookAuthor)) {
+            // set the owning side to null (unless already changed)
+            if ($bookAuthor->getAuthor() === $this) {
+                $bookAuthor->setAuthor(null);
+            }
+        }
 
         return $this;
     }
