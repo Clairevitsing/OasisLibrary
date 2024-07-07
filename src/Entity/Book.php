@@ -22,7 +22,7 @@ class Book
     #[ORM\Column(length: 255)]
     private ?string $ISBN = null;
 
-    #[ORM\Column(type: Types::DATE_MUTABLE)]
+    #[ORM\Column(type: Types::DATE_IMMUTABLE)]
     private ?\DateTimeInterface $publishedYear = null;
 
     #[ORM\Column(type: Types::TEXT)]
@@ -31,9 +31,9 @@ class Book
     #[ORM\Column(length: 255)]
     private ?string $image = null;
 
-    #[ORM\ManyToOne(inversedBy: 'Book')]
-    #[ORM\JoinColumn(nullable: false)]
-    private ?Category $categoryId = null;
+    #[ORM\ManyToOne(inversedBy: 'Books')]
+    #[ORM\JoinColumn(name: "category_id", nullable: false, referencedColumnName: "id")]
+    private ?Category $category = null;
 
     #[ORM\ManyToOne(inversedBy: 'book')]
     private ?Loan $loan = null;
@@ -118,14 +118,14 @@ class Book
         return $this;
     }
 
-    public function getCategoryId(): ?Category
+    public function getCategory(): ?Category
     {
-        return $this->categoryId;
+        return $this->category;
     }
 
-    public function setCategoryId(?Category $categoryId): static
+    public function setCategory(?Category $category): static
     {
-        $this->categoryId = $categoryId;
+        $this->category = $category;
 
         return $this;
     }

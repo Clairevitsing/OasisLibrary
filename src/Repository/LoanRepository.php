@@ -9,7 +9,7 @@ use Doctrine\Persistence\ManagerRegistry;
 /**
  * @extends ServiceEntityRepository<Loan>
  */
-class BorrowRepository extends ServiceEntityRepository
+class LoanRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {

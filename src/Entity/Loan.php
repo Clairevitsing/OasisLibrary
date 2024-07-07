@@ -2,13 +2,13 @@
 
 namespace App\Entity;
 
-use App\Repository\BorrowRepository;
+use App\Repository\LoanRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(repositoryClass: BorrowRepository::class)]
+#[ORM\Entity(repositoryClass: LoanRepository::class)]
 class Loan
 {
     #[ORM\Id]
@@ -28,10 +28,10 @@ class Loan
     /**
      * @var Collection<int, Book>
      */
-    #[ORM\OneToMany(targetEntity: Book::class, mappedBy: 'borrow')]
+    #[ORM\OneToMany(targetEntity: Book::class, mappedBy: 'loan')]
     private Collection $book;
 
-    #[ORM\ManyToOne(inversedBy: 'borrow')]
+    #[ORM\ManyToOne(inversedBy: 'loan')]
     #[ORM\JoinColumn(nullable: false)]
     private ?User $user = null;
 

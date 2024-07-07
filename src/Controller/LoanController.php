@@ -6,13 +6,13 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
-class BorrowController extends AbstractController
+class LoanController extends AbstractController
 {
-    #[Route('/borrow', name: 'app_borrow')]
+    #[Route('/loan', name: 'app_loan')]
     public function index(): Response
     {
-        return $this->render('borrow/index.html.twig', [
-            'controller_name' => 'BorrowController',
+        return $this->render('loan/index.html.twig', [
+            'controller_name' => 'LoanController',
         ]);
     }
 }
