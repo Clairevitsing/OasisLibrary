@@ -8,6 +8,7 @@ use App\Entity\BookAuthor;
 use App\Entity\Category;
 use App\Entity\Loan;
 use App\Entity\User;
+use DateTime;
 use DateTimeImmutable;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
@@ -116,8 +117,9 @@ class AppFixtures extends Fixture
             $book->setTitle($faker->sentence(3));
             $book->setDescription($faker->text(500));
             // Create a DateTimeImmutable object for the published year
-            $publishedYear = new DateTimeImmutable($faker->date('Y-m-d', '-30 years'));
+            $publishedYear = new DateTime($faker->date('Y-m-d', '-30 years'));
             $book->setPublishedYear($publishedYear);
+
             $book->setCategory($faker->randomElement($categories));
             // 80% de chance d'être disponible
             $book->setAvailable($faker->boolean(80));

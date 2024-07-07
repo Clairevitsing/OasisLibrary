@@ -22,7 +22,7 @@ class Book
     #[ORM\Column(length: 255)]
     private ?string $ISBN = null;
 
-    #[ORM\Column(type: Types::DATE_IMMUTABLE)]
+    #[ORM\Column(type: Types::DATE_MUTABLE)]
     private ?\DateTimeInterface $publishedYear = null;
 
     #[ORM\Column(type: Types::TEXT)]
