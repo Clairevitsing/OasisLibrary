@@ -50,12 +50,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @var Collection<int, Loan>
      */
     #[ORM\OneToMany(targetEntity: Loan::class, mappedBy: 'user', orphanRemoval: true)]
-    private Collection $borrow;
+    private Collection $loan;
 
-    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $subStartDate = null;
 
-    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $subEndDate = null;
 
     public function __construct()
@@ -189,27 +189,27 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @return Collection<int, Loan>
      */
-    public function getBorrow(): Collection
+    public function getLoan(): Collection
     {
-        return $this->borrow;
+        return $this->loan;
     }
 
-    public function addBorrow(Loan $borrow): static
+    public function addLoan(Loan $loan): static
     {
-        if (!$this->borrow->contains($borrow)) {
-            $this->borrow->add($borrow);
-            $borrow->setUser($this);
+        if (!$this->loan->contains($loan)) {
+            $this->loan->add($loan);
+            $loan->setUser($this);
         }
 
         return $this;
     }
 
-    public function removeBorrow(Loan $borrow): static
+    public function removeLoan(Loan $loan): static
     {
-        if ($this->borrow->removeElement($borrow)) {
+        if ($this->loan->removeElement(loan)) {
             // set the owning side to null (unless already changed)
-            if ($borrow->getUser() === $this) {
-                $borrow->setUser(null);
+            if ($loan->getUser() === $this) {
+                $loan->setUser(null);
             }
         }
 

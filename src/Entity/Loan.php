@@ -25,19 +25,19 @@ class Loan
     #[ORM\Column(type: Types::DATE_MUTABLE)]
     private ?\DateTimeInterface $returnDate = null;
 
-    /**
-     * @var Collection<int, Book>
-     */
-    #[ORM\OneToMany(targetEntity: Book::class, mappedBy: 'loan')]
-    private Collection $book;
-
     #[ORM\ManyToOne(inversedBy: 'loan')]
     #[ORM\JoinColumn(nullable: false)]
     private ?User $user = null;
 
+    /**
+     * @var Collection<int, BookLoan>
+     */
+    #[ORM\OneToMany(targetEntity: BookLoan::class, mappedBy: 'loan')]
+    private Collection $bookLoans;
+
     public function __construct()
     {
-        $this->book = new ArrayCollection();
+        $this->bookLoans = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -81,36 +81,6 @@ class Loan
         return $this;
     }
 
-    /**
-     * @return Collection<int, Book>
-     */
-    public function getBook(): Collection
-    {
-        return $this->book;
-    }
-
-    public function addBook(Book $book): static
-    {
-        if (!$this->book->contains($book)) {
-            $this->book->add($book);
-            $book->setLoan($this);
-        }
-
-        return $this;
-    }
-
-    public function removeBook(Book $book): static
-    {
-        if ($this->book->removeElement($book)) {
-            // set the owning side to null (unless already changed)
-            if ($book->getLoan() === $this) {
-                $book->setLoan(null);
-            }
-        }
-
-        return $this;
-    }
-
     public function getUser(): ?User
     {
         return $this->user;
@@ -119,6 +89,36 @@ class Loan
     public function setUser(?User $user): static
     {
         $this->user = $user;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, BookLoan>
+     */
+    public function getBookLoans(): Collection
+    {
+        return $this->bookLoans;
+    }
+
+    public function addBookLoan(BookLoan $bookLoan): static
+    {
+        if (!$this->bookLoans->contains($bookLoan)) {
+            $this->bookLoans->add($bookLoan);
+            $bookLoan->setLoan($this);
+        }
+
+        return $this;
+    }
+
+    public function removeBookLoan(BookLoan $bookLoan): static
+    {
+        if ($this->bookLoans->removeElement($bookLoan)) {
+            // set the owning side to null (unless already changed)
+            if ($bookLoan->getLoan() === $this) {
+                $bookLoan->setLoan(null);
+            }
+        }
 
         return $this;
     }

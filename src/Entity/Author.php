@@ -25,7 +25,7 @@ class Author
     #[ORM\Column(length: 255)]
     private ?string $biography = null;
 
-    #[ORM\Column(type: Types::DATE_IMMUTABLE)]
+    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $birthDate = null;
 
     /**
