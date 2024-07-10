@@ -5,6 +5,7 @@ namespace App\DataFixtures;
 use App\Entity\Author;
 use App\Entity\Book;
 use App\Entity\BookAuthor;
+use App\Entity\BookLoan;
 use App\Entity\Category;
 use App\Entity\Loan;
 use App\Entity\User;
@@ -35,7 +36,10 @@ class AppFixtures extends Fixture
         $categories = $this->createCategories($manager, $faker);
         $authors = $this->createAuthors($manager, $faker);
         $users = $this->createUsers($manager, $faker);
-        $this->createBooks($manager, $faker, $categories, $authors, $users);
+        $books = $this->createBooks($manager, $faker, $categories, $authors, $users);
+        $loans = $this->createLoans($manager, $faker, $users);
+
+        $this->createBookLoans($manager, $faker, $books, $loans);
 
         $manager->flush();
 
@@ -190,44 +194,69 @@ class AppFixtures extends Fixture
         return $username;
     }
 
-
-    private function createLoans(ObjectManager $manager, Generator $faker, array $books, array $users): void
+    private function createLoans(ObjectManager $manager, Generator $faker, array $users): array
     {
+        $loans = [];
         for ($i = 0; $i < self::NB_LOANS; $i++) {
             $loan = new Loan();
 
-            // Select a random book that is not already borrowed
+            // Set loan date within the last 6 months
+            $loanDate = $faker->dateTimeBetween('-6 months', 'now');
+            $loan->setLoanDate($loanDate);
+
+            // Set due date 3 weeks after loan date
+            $dueDate = (clone $loanDate)->modify('+3 weeks');
+            $loan->setDueDate($dueDate);
+
+            // 70% chance that the loan has been returned
+            if ($faker->boolean(70)) {
+                $returnDate = $faker->dateTimeBetween($loanDate, 'now');
+                $loan->setReturnDate($returnDate);
+            }
+
+            $loan->setUser($faker->randomElement($users));
+
+            $manager->persist($loan);
+            $loans[] = $loan;
+        }
+
+        $manager->flush();
+        return $loans;
+    }
+
+    private function createBookLoans(ObjectManager $manager, Generator $faker, array $books, array $loans): void
+    {
+        foreach ($loans as $loan) {
+            // Choose a random number of books for this loan (1 to 3)
+            $numberOfBooks = $faker->numberBetween(1, 3);
+
+            // Get available books
             $availableBooks = array_filter($books, function($book) {
                 return $book->isAvailable();
             });
 
-            if (empty($availableBooks)) {
-                continue; // If there are no available books, skip to the next iteration
+            // If there are not enough available books, skip to the next loan
+            if (count($availableBooks) < $numberOfBooks) {
+                continue;
             }
 
-            $book = $faker->randomElement($availableBooks);
-            $book->setAvailable(false);
+            // Select random books
+            $selectedBooks = $faker->randomElements($availableBooks, $numberOfBooks);
 
-            // Set loan date within the last 6 months
-            $loanDate = $faker->dateTimeBetween('-6 months', 'now');
+            foreach ($selectedBooks as $book) {
+                $bookLoan = new BookLoan();
+                $bookLoan->setBook($book);
+                $bookLoan->setLoan($loan);
 
-            // Set due date 3 weeks after loan date
-            $dueDate = clone $loanDate;
-            $dueDate->modify('+3 weeks');
+                $book->addBookLoan($bookLoan);
+                $loan->addBookLoan($bookLoan);
 
-            $loan->setLoanDate($loanDate);
-            $loan->setDueDate($dueDate);
-            $loan->addBook($book);
-            $loan->setUser($faker->randomElement($users));
+                $book->setAvailable(false);
 
-            // 70% chance that the book has been returned
-            if ($faker->boolean(70)) {
-                $returnDate = $faker->dateTimeBetween($loanDate, 'now');
-                $loan->setReturnDate($returnDate);
-                $book->setAvailable(true);
+                $manager->persist($bookLoan);
             }
-
-            $manager->persist($loan);
         }
+
+        $manager->flush();
     }
 }

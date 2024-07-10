@@ -52,11 +52,14 @@ class Book
     #[ORM\OneToMany(targetEntity: BookLoan::class, mappedBy: 'book')]
     private Collection $bookLoans;
 
+
     public function __construct()
     {
         $this->authors = new ArrayCollection();
         $this->bookAuthors = new ArrayCollection();
         $this->bookLoans = new ArrayCollection();
+        $this->loan = new ArrayCollection();
+        $this->author = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -136,13 +139,6 @@ class Book
         return $this;
     }
 
-    /**
-     * @return Collection<int, Author>
-     */
-    public function getAuthors(): Collection
-    {
-        return $this->authors;
-    }
 
     public function addAuthor(Author $author): static
     {
@@ -233,5 +229,29 @@ class Book
         }
 
         return $this;
+    }
+
+    public function addLoan(Loan $loan): static
+    {
+        if (!$this->loan->contains($loan)) {
+            $this->loan->add($loan);
+        }
+
+        return $this;
+    }
+
+    public function removeLoan(Loan $loan): static
+    {
+        $this->loan->removeElement($loan);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Author>
+     */
+    public function getAuthor(): Collection
+    {
+        return $this->author;
     }
 }

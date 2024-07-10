@@ -22,7 +22,7 @@ class Loan
     #[ORM\Column(type: Types::DATE_MUTABLE)]
     private ?\DateTimeInterface $dueDate = null;
 
-    #[ORM\Column(type: Types::DATE_MUTABLE)]
+    #[ORM\Column(type: Types::DATE_MUTABLE, nullable:true)]
     private ?\DateTimeInterface $returnDate = null;
 
     #[ORM\ManyToOne(inversedBy: 'loan')]
@@ -34,6 +34,7 @@ class Loan
      */
     #[ORM\OneToMany(targetEntity: BookLoan::class, mappedBy: 'loan')]
     private Collection $bookLoans;
+    
 
     public function __construct()
     {
@@ -118,6 +119,26 @@ class Loan
             if ($bookLoan->getLoan() === $this) {
                 $bookLoan->setLoan(null);
             }
+        }
+
+        return $this;
+    }
+
+
+    public function addBook(Book $book): static
+    {
+        if (!$this->books->contains($book)) {
+            $this->books->add($book);
+            $book->addLoan($this);
+        }
+
+        return $this;
+    }
+
+    public function removeBook(Book $book): static
+    {
+        if ($this->books->removeElement($book)) {
+            $book->removeLoan($this);
         }
 
         return $this;
