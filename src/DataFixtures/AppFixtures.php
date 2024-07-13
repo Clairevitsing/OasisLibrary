@@ -10,11 +10,11 @@ use App\Entity\Category;
 use App\Entity\Loan;
 use App\Entity\User;
 use DateTime;
-use DateTimeImmutable;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 use Faker\Factory;
 use Faker\Generator;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class AppFixtures extends Fixture
 {
@@ -29,6 +29,9 @@ class AppFixtures extends Fixture
     const ROLE_USER = 'ROLE_USER';
     const ROLE_LIBRARIAN = 'ROLE_LIBRARIAN';
 
+    public function __construct(private UserPasswordHasherInterface $passwordHasher)
+    {
+    }
     public function load(ObjectManager $manager): void
     {
         $faker = Factory::create('fr_FR');
@@ -102,7 +105,7 @@ class AppFixtures extends Fixture
                 $user->setRoles([self::ROLE_USER]);
             }
 
-            $user->setPassword("password");
+            $user->setPassword($this->passwordHasher->hashPassword($user,"password"));
 
             //$user->setCreatedAt($faker->dateTimeBetween('-1 year', 'now'));
             //$user->setIsActive(true);
