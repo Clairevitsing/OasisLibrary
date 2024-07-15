@@ -31,6 +31,17 @@ class RegistrationController extends AbstractController
                 )
             );
 
+            // Get the selected roles
+            $roles = $form->get('roles')->getData();
+
+            // Ensure ROLE_USER is always present
+            if (!in_array('ROLE_USER', $roles)) {
+                $roles[] = 'ROLE_USER';
+            }
+
+            // Set the roles on the user
+            $user->setRoles($roles);
+
             $entityManager->persist($user);
             $entityManager->flush();
 
