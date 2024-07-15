@@ -7,6 +7,7 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateTimeType;
+use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -32,11 +33,14 @@ class RegistrationFormType extends AbstractType
                 'multiple' => true,
                 'mapped' => false,
             ])
-            ->add('subStartDate', DateTimeType::class, [
+            ->add('subStartDate', DateType::class, [
                 'widget' => 'single_text',
                 'required' => false,
             ])
-            ->add('subEndDate')
+            ->add('subEndDate',DateType::class, [
+        'widget' => 'single_text',
+        'required' => false,
+    ])
             ->add('agreeTerms', CheckboxType::class, [
                 'mapped' => false,
                 'constraints' => [
