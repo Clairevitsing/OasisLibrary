@@ -37,9 +37,7 @@ class Author
 
     public function __construct()
     {
-        $this->book = new ArrayCollection();
         $this->bookAuthors = new ArrayCollection();
-        $this->books = new ArrayCollection();
     }
 
     public function getId(): ?int

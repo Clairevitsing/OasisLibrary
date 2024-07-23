@@ -16,6 +16,15 @@ class AuthorRepository extends ServiceEntityRepository
         parent::__construct($registry, Author::class);
     }
 
+    public function findAll():array
+    {
+        return $this->createQueryBuilder('a')
+            ->leftJoin('a.bookAuthor', 'b')
+            ->select('a.id, a.firstName, a.lastName, a.biography, a.birthDay, b.id AS bookId')
+            ->getQuery()
+            ->getResult();
+    }
+
     //    /**
     //     * @return Author[] Returns an array of Author objects
     //     */
