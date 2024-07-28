@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Author;
+use App\Entity\Book;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -39,30 +40,29 @@ class AuthorController extends AbstractController
     }
 
     #[Route('/', name: 'author_create', methods: ['POST'])]
-    public function create(Request $request, AuthorRepository $authorRepository): JsonResponse
+    public function create(Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
-        try {
-            // Retrieve the data sent from Postman
-            $data = json_decode($request->getContent(), true);
+        $data = json_decode($request->getContent(), true);
 
-            // Validation of required data
-            $requiredFields = ['name', 'averageSize', 'averageLifespan', 'martialArt', 'phoneNumber', 'countryIds'];
-            foreach ($requiredFields as $field) {
-                // Check if each required field is present in the data
-                if (!isset($data[$field])) {
-                    // If any required field is missing, throw a Bad Request exception
-                    return new JsonResponse(['message' => "Missing required field: $field"], Response::HTTP_BAD_REQUEST);
-                }
-            }
+        $author = new Author();
+        $author->setFirstName($data['firstName']);
+        $author->setLastName($data['lastName']);
+        $author->setBiography($data['biography']);
+        $author->setBirthDate(new \DateTime($data['birthDate']));
 
-            // Call the create method of AuthorRepository to create the animal
-            $author = $this->authorManager->create($data);
-
-            // Return a JSON response indicating successful creation of the author
-            return new JsonResponse($authorRepository->findOneById($author->getId()), Response::HTTP_CREATED);
-        } catch (\Exception $exception) {
-            return new JsonResponse(['message' => $exception->getMessage()], $exception->getCode());
+        foreach ($data['books'] as $bookData) {
+            $book = new Book();
+            $book->setTitle($bookData['title']);
+            $author->addBook($book);
         }
+
+        $entityManager->persist($author);
+        $entityManager->flush();
+
+        return $this->json([
+            'message' => 'Author created successfully',
+            'id' => $author->getId()
+        ], Response::HTTP_CREATED);
     }
 
     #[Route('/{id}', name: 'author_edit', methods: ['PUT'])]

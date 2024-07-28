@@ -16,37 +16,68 @@ class AuthorRepository extends ServiceEntityRepository
         parent::__construct($registry, Author::class);
     }
 
-    public function findAll():array
+
+
+    public function findAll(): array
     {
-        return $this->createQueryBuilder('a')
-            ->leftJoin('a.bookAuthor', 'b')
-            ->select('a.id, a.firstName, a.lastName, a.biography, a.birthDay, b.id AS bookId')
-            ->getQuery()
-            ->getResult();
+        $query = $this->createQueryBuilder('a')
+            ->select('a.id, a.firstName, a.lastName, a.biography, a.birthDate')
+            ->getQuery();
+
+        $authors = $query->getResult();
+
+        // Récupérer les livres pour chaque auteur
+        foreach ($authors as &$author) {
+            $books = $this->createQueryBuilder('a')
+                ->select('b.id, b.title')
+                ->leftJoin('a.bookAuthors', 'ba')
+                ->leftJoin('ba.book', 'b')
+                ->where('a.id = :authorId')
+                ->setParameter('authorId', $author['id'])
+                ->getQuery()
+                ->getResult();
+
+            $author['books'] = $books;
+        }
+
+        return $authors;
+    }
+    public function findOneById(int $id): ?array
+    {
+        $query = $this->createQueryBuilder('a')
+            ->select('a.id, a.firstName, a.lastName, a.biography, a.birthDate')
+            ->leftJoin('a.bookAuthors', 'ba')
+            ->leftJoin('ba.book', 'b')
+            ->addSelect('b.id as book_id, b.title as book_title')
+            ->where('a.id = :id')
+            ->setParameter('id', $id)
+            ->getQuery();
+
+        $result = $query->getResult();
+
+        if (empty($result)) {
+            return null;
+        }
+
+        $author = [
+            'id' => $result[0]['id'],
+            'firstName' => $result[0]['firstName'],
+            'lastName' => $result[0]['lastName'],
+            'biography' => $result[0]['biography'],
+            'birthDate' => $result[0]['birthDate'],
+            'books' => []
+        ];
+
+        foreach ($result as $row) {
+            if ($row['book_id'] !== null) {
+                $author['books'][] = [
+                    'id' => $row['book_id'],
+                    'title' => $row['book_title']
+                ];
+            }
+        }
+
+        return $author;
     }
 
-    //    /**
-    //     * @return Author[] Returns an array of Author objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('a')
-    //            ->andWhere('a.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('a.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
-
-    //    public function findOneBySomeField($value): ?Author
-    //    {
-    //        return $this->createQueryBuilder('a')
-    //            ->andWhere('a.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
 }
