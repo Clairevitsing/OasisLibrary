@@ -18,18 +18,25 @@ class Category
     #[ORM\Column(length: 50)]
     private ?string $name = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(type: "text", nullable: true)]
     private ?string $description = null;
 
     /**
      * @var Collection<int, book>
      */
     #[ORM\OneToMany(targetEntity: book::class, mappedBy: 'categoryId', orphanRemoval: true)]
-    private Collection $Book;
+    private Collection $Books;
+
+    /**
+     * @var Collection<int, Book>
+     */
+    #[ORM\OneToMany(targetEntity: Book::class, mappedBy: 'category', orphanRemoval: true)]
+    private Collection $books;
 
     public function __construct()
     {
-        $this->Book = new ArrayCollection();
+        $this->Books = new ArrayCollection();
+        $this->books = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -64,16 +71,16 @@ class Category
     /**
      * @return Collection<int, book>
      */
-    public function getBook(): Collection
+    public function getBooks(): Collection
     {
-        return $this->Book;
+        return $this->Books;
     }
 
     public function addBook(book $book): static
     {
-        if (!$this->Book->contains($book)) {
-            $this->Book->add($book);
-            $book->setCategoryId($this);
+        if (!$this->Books->contains($book)) {
+            $this->Books->add($book);
+            $book->setCategory($this);
         }
 
         return $this;
@@ -81,10 +88,10 @@ class Category
 
     public function removeBook(book $book): static
     {
-        if ($this->Book->removeElement($book)) {
+        if ($this->Books->removeElement($book)) {
             // set the owning side to null (unless already changed)
-            if ($book->getCategoryId() === $this) {
-                $book->setCategoryId(null);
+            if ($book->getCategory() === $this) {
+                $book->setCategory(null);
             }
         }
 

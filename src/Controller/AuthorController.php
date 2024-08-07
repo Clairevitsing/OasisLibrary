@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Author;
 use App\Entity\Book;
+use App\Entity\Category;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -11,20 +12,20 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use App\Repository\AuthorRepository;
-use Symfony\Component\Serializer\SerializerInterface;
 
 #[Route('api/authors')]
 class AuthorController extends AbstractController
 {
     public function __construct(
-        private AuthorRepository $authorRepository
+        private AuthorRepository $authorRepository,
+        private EntityManagerInterface $entityManager
     ){
     }
     #[Route('/', name: 'author_index', methods: ['GET'])]
     public function index(AuthorRepository $authorRepository): JsonResponse
     {
         $authors = $authorRepository->findAll();
-        dd($authors);
+        //dd($authors);
         return $this->json($authors, context: ['groups' => 'author:read']);
     }
 
@@ -39,10 +40,23 @@ class AuthorController extends AbstractController
         return $this->json($author, context: ['groups' => 'author:read']);
     }
 
-    #[Route('/', name: 'author_create', methods: ['POST'])]
-    public function create(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    #[Route('/new', name: 'author_create', methods: ['POST'])]
+    public function create(Request $request): JsonResponse
     {
-        $data = json_decode($request->getContent(), true);
+        $content = $request->getContent();
+        if (empty($content)) {
+            return $this->json(['error' => 'No data provided'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $data = json_decode($content, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return $this->json(['error' => 'Invalid JSON'], Response::HTTP_BAD_REQUEST);
+        }
+
+        // Check that all required fields are present
+        if (!isset($data['firstName'], $data['lastName'], $data['biography'], $data['birthDate'], $data['books'])) {
+            return $this->json(['error' => 'Missing required fields'], Response::HTTP_BAD_REQUEST);
+        }
 
         $author = new Author();
         $author->setFirstName($data['firstName']);
@@ -50,14 +64,61 @@ class AuthorController extends AbstractController
         $author->setBiography($data['biography']);
         $author->setBirthDate(new \DateTime($data['birthDate']));
 
+        // Preload all categories
+        $categoryRepository = $this->entityManager->getRepository(Category::class);
+        $categories = $categoryRepository->findAll();
+        $categoryMap = [];
+        foreach ($categories as $category) {
+            $categoryMap[$category->getName()] = $category; // Map category names to category objects
+        }
+
         foreach ($data['books'] as $bookData) {
-            $book = new Book();
-            $book->setTitle($bookData['title']);
+            if (!isset($bookData['title'], $bookData['category'])) {
+                return $this->json(['error' => 'Book title and category are required'], Response::HTTP_BAD_REQUEST);
+            }
+
+            // Check if the book already exists
+            $book = $this->entityManager->getRepository(Book::class)->findOneBy(['title' => $bookData['title']]);
+
+            if (!$book) {
+                $book = new Book();
+                $book->setTitle($bookData['title']);
+                $book->setISBN($bookData['ISBN'] ?? null);
+
+                if (isset($bookData['publishedYear'])) {
+                    $publishedDate = new \DateTime();
+                    $publishedDate->setDate($bookData['publishedYear'], 1, 1);
+                    $book->setPublishedYear($publishedDate);
+                }
+
+                $book->setDescription($bookData['description'] ?? null);
+                $book->setImage($bookData['image'] ?? null);
+
+                // Check and get or create Category
+                $categoryName = $bookData['category'];
+                if (!isset($categoryMap[$categoryName])) {
+                    $category = new Category();
+                    $category->setName($categoryName);
+                    $category->setDescription($bookData['categoryDescription'] ?? null);
+                    // Persist new category
+                    $this->entityManager->persist($category);
+                    // Add to category map
+                    $categoryMap[$categoryName] = $category;
+                }
+                $book->setCategory($categoryMap[$categoryName]); // Set the book's category
+
+                $book->setAvailable($bookData['available'] ?? false);
+
+                $this->entityManager->persist($book);
+            }
+
+            // Add author to the book and book to the author
+            $book->addAuthor($author);
             $author->addBook($book);
         }
 
-        $entityManager->persist($author);
-        $entityManager->flush();
+        $this->entityManager->persist($author); // Persist the author
+        $this->entityManager->flush(); // Flush all changes to the database
 
         return $this->json([
             'message' => 'Author created successfully',
@@ -66,7 +127,7 @@ class AuthorController extends AbstractController
     }
 
     #[Route('/{id}', name: 'author_edit', methods: ['PUT'])]
-    public function edit(int $id, Request $request,AuthorRepository $authorRepository): JsonResponse
+    public function edit(int $id, Request $request): JsonResponse
     {
         // Retrieve the animal to edit using the AuthorRepository
         $author = $authorRepository->find($id);

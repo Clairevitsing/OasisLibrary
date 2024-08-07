@@ -34,11 +34,12 @@ class Loan
      */
     #[ORM\OneToMany(targetEntity: BookLoan::class, mappedBy: 'loan')]
     private Collection $bookLoans;
-    
+
 
     public function __construct()
     {
         $this->bookLoans = new ArrayCollection();
+        $this->books = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -142,5 +143,13 @@ class Loan
         }
 
         return $this;
+    }
+
+    /**
+     * @return Collection<int, Book>
+     */
+    public function getBooks(): Collection
+    {
+        return $this->books;
     }
 }

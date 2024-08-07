@@ -7,8 +7,6 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use DateTime;
-
 
 #[ORM\Entity(repositoryClass: BookRepository::class)]
 class Book
@@ -21,45 +19,32 @@ class Book
     #[ORM\Column(length: 255)]
     private ?string $title = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 100)]
     private ?string $ISBN = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
-    private ?\DateTimeInterface $publishedYear = null;
+    private ?\DateTimeInterface $published_year = null;
 
     #[ORM\Column(type: Types::TEXT)]
     private ?string $description = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(type: Types::TEXT)]
     private ?string $image = null;
-
-    #[ORM\ManyToOne(inversedBy: 'Books')]
-    #[ORM\JoinColumn(name: "category_id", nullable: false, referencedColumnName: "id")]
-    private ?Category $category = null;
-
-    /**
-     * @var Collection<int, BookAuthor>
-     */
-    #[ORM\OneToMany(targetEntity: BookAuthor::class, mappedBy: 'book', orphanRemoval: true)]
-    private Collection $bookAuthors;
 
     #[ORM\Column]
     private ?bool $available = null;
 
-    /**
-     * @var Collection<int, BookLoan>
-     */
-    #[ORM\OneToMany(targetEntity: BookLoan::class, mappedBy: 'book')]
-    private Collection $bookLoans;
+    #[ORM\ManyToOne(inversedBy: 'books')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Category $category = null;
 
+    #[ORM\ManyToOne(inversedBy: 'books')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?BookLoan $bookLoan = null;
 
     public function __construct()
     {
-        $this->authors = new ArrayCollection();
-        $this->bookAuthors = new ArrayCollection();
-        $this->bookLoans = new ArrayCollection();
         $this->loan = new ArrayCollection();
-        $this->author = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -93,12 +78,12 @@ class Book
 
     public function getPublishedYear(): ?\DateTimeInterface
     {
-        return $this->publishedYear;
+        return $this->published_year;
     }
 
-    public function setPublishedYear(\DateTimeInterface $publishedYear): self
+    public function setPublishedYear(\DateTimeInterface $published_year): static
     {
-        $this->publishedYear = $publishedYear;
+        $this->published_year = $published_year;
 
         return $this;
     }
@@ -127,68 +112,6 @@ class Book
         return $this;
     }
 
-    public function getCategory(): ?Category
-    {
-        return $this->category;
-    }
-
-    public function setCategory(?Category $category): static
-    {
-        $this->category = $category;
-
-        return $this;
-    }
-
-
-    public function addAuthor(Author $author): static
-    {
-        if (!$this->authors->contains($author)) {
-            $this->authors->add($author);
-            $author->addBook($this);
-        }
-
-        return $this;
-    }
-
-    public function removeAuthor(Author $author): static
-    {
-        if ($this->authors->removeElement($author)) {
-            $author->removeBook($this);
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, BookAuthor>
-     */
-    public function getBookAuthors(): Collection
-    {
-        return $this->bookAuthors;
-    }
-
-    public function addBookAuthor(BookAuthor $bookAuthor): static
-    {
-        if (!$this->bookAuthors->contains($bookAuthor)) {
-            $this->bookAuthors->add($bookAuthor);
-            $bookAuthor->setBook($this);
-        }
-
-        return $this;
-    }
-
-    public function removeBookAuthor(BookAuthor $bookAuthor): static
-    {
-        if ($this->bookAuthors->removeElement($bookAuthor)) {
-            // set the owning side to null (unless already changed)
-            if ($bookAuthor->getBook() === $this) {
-                $bookAuthor->setBook(null);
-            }
-        }
-
-        return $this;
-    }
-
     public function isAvailable(): ?bool
     {
         return $this->available;
@@ -201,34 +124,24 @@ class Book
         return $this;
     }
 
+    public function getCategory(): ?Category
+    {
+        return $this->category;
+    }
+
+    public function setCategory(?Category $category): static
+    {
+        $this->category = $category;
+
+        return $this;
+    }
+
     /**
-     * @return Collection<int, BookLoan>
+     * @return Collection<int, Loan>
      */
-    public function getBookLoans(): Collection
+    public function getLoan(): Collection
     {
-        return $this->bookLoans;
-    }
-
-    public function addBookLoan(BookLoan $bookLoan): static
-    {
-        if (!$this->bookLoans->contains($bookLoan)) {
-            $this->bookLoans->add($bookLoan);
-            $bookLoan->setBook($this);
-        }
-
-        return $this;
-    }
-
-    public function removeBookLoan(BookLoan $bookLoan): static
-    {
-        if ($this->bookLoans->removeElement($bookLoan)) {
-            // set the owning side to null (unless already changed)
-            if ($bookLoan->getBook() === $this) {
-                $bookLoan->setBook(null);
-            }
-        }
-
-        return $this;
+        return $this->loan;
     }
 
     public function addLoan(Loan $loan): static
@@ -247,11 +160,15 @@ class Book
         return $this;
     }
 
-    /**
-     * @return Collection<int, Author>
-     */
-    public function getAuthor(): Collection
+    public function getBookLoan(): ?BookLoan
     {
-        return $this->author;
+        return $this->bookLoan;
+    }
+
+    public function setBookLoan(?BookLoan $bookLoan): static
+    {
+        $this->bookLoan = $bookLoan;
+
+        return $this;
     }
 }
